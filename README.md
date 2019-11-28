@@ -1,3 +1,6 @@
+
+[WARNING] 该项目已经停止维护，愿意继续维护的同学请联系 welefen@gmail.com，可以把项目转给你。
+
 ## 介绍
 
 pushState是一个可以操作history的api，该api的介绍和使用请见这里：http://www.welefen.com/use-ajax-and-pushstate.html
@@ -18,19 +21,40 @@ pjax是对ajax + pushState的封装，让你可以很方便的使用pushState技
 将jquery.pjax.js部署到你的页面中，将需要使用pjax的a链接进行绑定（不能绑定外域的url），如:
 
 
+```js
+$.pjax({
+  selector: 'a',
+  container: '#container', //内容替换的容器
+  show: 'fade',  //展现的动画，支持默认和fade, 可以自定义动画方式，这里为自定义的function即可。
+  cache: true,  //是否使用缓存
+  storage: true,  //是否使用本地存储
+  titleSuffix: '', //标题后缀
+  filter: function(){},
+  callback: function(){}
+})
 ```
-	$.pjax({
-		selector: 'a',
-		container: '#container', //内容替换的容器
-		show: 'fade',  //展现的动画，支持默认和fade, 可以自定义动画方式，这里为自定义的function即可。
-		cache: true,  //是否使用缓存
-		storage: true,  //是否使用本地存储
-		titleSuffix: '', //标题后缀
-		filter: function(){},
-		callback: function(){}
-	})
+**注意：若设置 storage 为 true，为避免多次请求页面后导致本地 localStorage 容量不足而触发异常，请在页面加载完成后加载以下 JavaScript 代码清除已过期的记录。**
 
+```javascript
+if (!!window.localStorage) {
+    for (var key in localStorage) {
+        try {
+            if ((key.split("_") || [""])[0] === "pjax") {
+                var item = localStorage.getItem(key);
+                if (item) {
+                    item = JSON.parse(item);
+                    if ((parseInt(item.time) + 600 * 1000) <= new Date * 1) {
+                        localStorage.removeItem(key)
+                    }
+                }
+            }
+        } catch (e) { }
+    }
+}
 ```
+
+
+
 ### qwrap版
 
 qwrap版需要在页面引入qwrap和对应的ajax组件。
@@ -42,17 +66,16 @@ qwrap见： https://github.com/jkisjk/qwrap
 或者你直接引用我打包好的： http://www.welefen.com/wp-content/themes/gplus/js/qwrap.js 由于我的空间速度不咋地，建议你另存为。
 
 
-```
-	QW.pjax(
-		selector: 'a',
-		container: '#container',
-		cache: true,
-		storage: true,
-		titleSuffix: '',
-		filter: function(){},
-		callback: function(){}
-	})
-
+```js
+QW.pjax(
+  selector: 'a',
+  container: '#container',
+  cache: true,
+  storage: true,
+  titleSuffix: '',
+  filter: function(){},
+  callback: function(){}
+})
 ```
 ### kissy版
 
@@ -60,17 +83,16 @@ kissy版需要在页面引入kissy。
 
 kissy见： http://docs.kissyui.com/
 
-```
-        KISSY.pjax(
-                selector: 'a',
-                container: '#container',
-                cache: true,
-                storage: true,
-                titleSuffix: '',
-                filter: function(){},
-                callback: function(){}
-        })
-
+```js
+KISSY.pjax(
+  selector: 'a',
+  container: '#container',
+  cache: true,
+  storage: true,
+  titleSuffix: '',
+  filter: function(){},
+  callback: function(){}
+})
 ```
 
 由于kissy核心没有引用sizzle, 只支持一些简单的selector, 所以selector参数的值最好只为a， 对于一些不使用pjax的链接，可以通过filter函数参数进行过滤，具体的使用方法见下面的参数说明。
@@ -110,15 +132,15 @@ options.cache的值是缓存时间，单位为秒，默认为: 24*3600(一天)
 
 这时候就可以使用options.filter函数进行过滤了。如：
 
-```
-	{
-		filter: function(href){
-			//对于wordpress后台的URL和wp-content里的URL不使用pjax
-			if(href.indexOf('/wp-admin') || href.indexOf('/wp-content')){
-				return true;
-			}
-		}
-	}
+```js
+{
+  filter: function(href){
+    //对于wordpress后台的URL和wp-content里的URL不使用pjax
+    if(href.indexOf('/wp-admin') || href.indexOf('/wp-content')){
+      return true;
+    }
+  }
+}
 ```
 对于要过滤掉的URL， 需要返回值为true。
 
@@ -128,18 +150,18 @@ options.cache的值是缓存时间，单位为秒，默认为: 24*3600(一天)
 
 该函数会在每个阶段都会执行，即使pjax发生error的时候，并且会传递一个参数标明当前的状态，如：
 
-```
-	{
-		callback: function(status){
-			var type = status.type;
-			switch(type){
-				case 'success': ;break; //正常
-				case 'cache':;break; //读取缓存	
-				case 'error': ;break; //发生异常
-				case 'hash': ;break; //只是hash变化
-			}
-		}
-	}
+```js
+{
+  callback: function(status){
+    var type = status.type;
+    switch(type){
+      case 'success': ;break; //正常
+      case 'cache':;break; //读取缓存	
+      case 'error': ;break; //发生异常
+      case 'hash': ;break; //只是hash变化
+    }
+  }
+}
 ```
 
 ## 事件(events)
@@ -154,13 +176,13 @@ options.cache的值是缓存时间，单位为秒，默认为: 24*3600(一天)
 
 这样你可以在pjax.start事件里显示loading效果，在pjax.end事件里隐藏loading了。如：
 
-```
-	$('#container').bind('pjax.start', function(){
-		$('#loading').show();
-	})
-	$('#container').bind('pjax.end', function(){
-		$('#loading').hide();
-	})
+```js
+$('#container').bind('pjax.start', function(){
+  $('#loading').show();
+})
+$('#container').bind('pjax.end', function(){
+  $('#loading').hide();
+})
 ```
 
 ## 浏览器支持
@@ -176,9 +198,9 @@ options.cache的值是缓存时间，单位为秒，默认为: 24*3600(一天)
 所以需要一个判断是否pjax请求的接口。如：php可以借鉴下面的实现
 
 ```
-	function is_pjax(){
-		return array_key_exists('HTTP_X_PJAX', $_SERVER) && $_SERVER['HTTP_X_PJAX'];
-	}	
+function is_pjax(){
+  return array_key_exists('HTTP_X_PJAX', $_SERVER) && $_SERVER['HTTP_X_PJAX'];
+}	
 ```
 
 ## 其他
